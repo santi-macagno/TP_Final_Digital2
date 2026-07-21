@@ -1,0 +1,74 @@
+MPLINK 5.09, LINKER
+Linker Map File - Created Tue Nov 18 20:28:27 2025
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000006
+                   .org_1       code   0x000004    program   0x0001fe
+                   .cinit    romdata   0x000103    program   0x000004
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000002      
+                            0x000004    0x000104      
+            260 out of 8455 program addresses used, program memory utilization is 3%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                 ADELANTE   0x000091    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                   APAGAR   0x0000b4    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+              APLICAR_100   0x00008a    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+               APLICAR_50   0x000083    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+       APLICAR_VEL_ACTUAL   0x00007e    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                    ATRAS   0x00009f    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                    BUCLE   0x000041    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                 D10_LOOP   0x0000f0    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                D10_LOOP2   0x0000f2    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                    DELAY   0x0000ee    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                  DERECHA   0x000098    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                   DORMIR   0x000047    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                 EXIT_ISR   0x0000fc    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                    GIROS   0x0000ad    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                   INICIO   0x000005    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                      ISR   0x00004b    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                IZQUIERDA   0x0000a6    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+               KICK_START   0x0000e5    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+             LIMPIAR_OERR   0x0000f9    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+            VELOCIDAD_100   0x0000c0    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+             VELOCIDAD_50   0x0000d2    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                   INICIO   0x000005    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                    BUCLE   0x000041    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                   DORMIR   0x000047    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                      ISR   0x00004b    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+       APLICAR_VEL_ACTUAL   0x00007e    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+               APLICAR_50   0x000083    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+              APLICAR_100   0x00008a    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                 ADELANTE   0x000091    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                  DERECHA   0x000098    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                    ATRAS   0x00009f    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                IZQUIERDA   0x0000a6    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                    GIROS   0x0000ad    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                   APAGAR   0x0000b4    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+            VELOCIDAD_100   0x0000c0    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+             VELOCIDAD_50   0x0000d2    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+               KICK_START   0x0000e5    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                    DELAY   0x0000ee    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                 D10_LOOP   0x0000f0    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                D10_LOOP2   0x0000f2    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+             LIMPIAR_OERR   0x0000f9    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+                 EXIT_ISR   0x0000fc    program     static C:\Facu\MPLAB\AUTITO_FINAL.X\autitoAsm.asm
+
+

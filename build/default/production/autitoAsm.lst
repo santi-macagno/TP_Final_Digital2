@@ -1,0 +1,1085 @@
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+Warning[205]: Found directive in column 1. (LIST)
+                      00001 LIST      P=16F887
+                      00002         #include <p16f887.inc>
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ; Build date : Jan 06 2020
+                      00005 ;  MPASM PIC16F887 processor include
+                      00006 ; 
+                      00007 ;  (c) Copyright 1999-2020 Microchip Technology, All rights reserved
+                      00008 ;==========================================================================
+                      00009 
+                      00810         LIST
+                      00003         
+                      00004         CBLOCK 0x20     ;declaracion de variables
+  00000020            00005 W_TEMP                  ;temporales     
+  00000021            00006 STATUS_TEMP             ;para guardar contexto
+  00000022            00007 PCLATH_TEMP             ;al final de la ISR
+  00000023            00008 TEMP                    ;guardado temporal del dato del puerto serie
+  00000024            00009 MODO_VEL                ;0 = 100%, 1 = 50%
+  00000025            00010 R0                      ; 
+  00000026            00011 R1                      ;ambos para un retardo
+  00000027            00012 FLAG_SLEEP              ;check para hacer un sleep
+                      00013         ENDC
+                      00014 
+                      00015 
+                      00016 ;================= vector de reset ==================
+                      00017         ORG 0x0000
+0000   30??           00018         MOVLW   HIGH(INICIO)
+0001   008A           00019         MOVWF   PCLATH
+0002   2???           00020         GOTO    INICIO
+                      00021 
+                      00022         ORG 0x0004
+0004   2???           00023         GOTO    ISR
+                      00024 
+                      00025 
+                      00026 ;====================================================
+                      00027 ;                      inicio del programa
+                      00028 ;====================================================
+0005                  00029 INICIO
+                      00030         ; Puertos digitales
+0005   1683 1703      00031         BANKSEL ANSEL
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0007   0188           00032         CLRF    ANSEL
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0008   0189           00033         CLRF    ANSELH
+                      00034 
+                      00035         ; Puertos
+0009   1683 1303      00036         BANKSEL TRISD
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+000B   0188           00037         CLRF    TRISD          ; salidas a motores
+                      00038 
+000C   1683 1303      00039         BANKSEL TRISC
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+000E   1787           00040         BSF     TRISC,7        ; RX
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+000F   1307           00041         BCF     TRISC,6        ; TX
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0010   1107           00042         BCF     TRISC,2        ; CCP1 ENA1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0011   1087           00043         BCF     TRISC,1        ; CCP2 ENA2
+                      00044 
+                      00045 ;================= USART ===================
+0012   1683 1303      00046         BANKSEL SPBRG          ;
+0014   3019           00047         MOVLW   .25            ; seteo velocidad del baudrate
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0015   0099           00048         MOVWF   SPBRG          ; a 9600 baudios
+                      00049 
+0016   1683 1303      00050         BANKSEL TXSTA          ; BRGH=1, TXEN=1
+0018   3024           00051         MOVLW   b'00100100'    ; modo alta velocidad, 8 bits
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0019   0098           00052         MOVWF   TXSTA          ; transmision habilitada
+                      00053 
+001A   1683 1703      00054         BANKSEL BAUDCTL        ; limpio todo BAUDCTL
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+001C   0187           00055         CLRF    BAUDCTL        ; 
+                      00056 
+001D   1283 1303      00057         BANKSEL RCSTA          ; SPEN=1, CREN=1
+001F   3090           00058         MOVLW   b'10010000'    ; habilito UART, habilito RX
+0020   0098           00059         MOVWF   RCSTA          ; recepcion continua
+                      00060 
+0021   1683 1303      00061         BANKSEL PIE1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0023   168C           00062         BSF     PIE1, RCIE     ; Habilito interrupcion RX
+                      00063 
+0024   1283 1303      00064         BANKSEL INTCON
+0026   30C0           00065         MOVLW   b'11000000'    ; GIE=1, PEIE=1
+0027   008B           00066         MOVWF   INTCON         ; interrupciones globales y perifericas
+                      00067 
+                      00068 ;================= PWM ===================
+0028   1283 1303      00069         BANKSEL CCP1CON
+002A   300C           00070         MOVLW   b'00001100'    ; modo PWM
+002B   0097           00071         MOVWF   CCP1CON
+                      00072 
+002C   1283 1303      00073         BANKSEL CCP2CON
+002E   300C           00074         MOVLW   b'00001100'    ; modo PWM
+002F   009D           00075         MOVWF   CCP2CON
+                      00076 
+0030   1683 1303      00077         BANKSEL PR2
+0032   309B           00078         MOVLW   0x9B           ; periodo PWM
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0033   0092           00079         MOVWF   PR2            
+                      00080 
+0034   1283 1303      00081         BANKSEL CCPR1L
+0036   30FF           00082         MOVLW   0xFF           ; duty inicial 100%
+0037   0095           00083         MOVWF   CCPR1L
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00084         
+0038   30FF           00085         MOVLW   0xFF
+0039   009B           00086         MOVWF   CCPR2L
+                      00087 
+003A   1283 1303      00088         BANKSEL T2CON
+003C   3004           00089         MOVLW   b'00000100'    ; TMR2 ON, prescaler 1
+003D   0092           00090         MOVWF   T2CON
+                      00091 
+003E   1283 1303      00092         BANKSEL MODO_VEL
+0040   01A4           00093         CLRF    MODO_VEL       ; modo 100%
+                      00094 
+0041                  00095 BUCLE
+                      00096 
+0041   1283 1303      00097         BANKSEL FLAG_SLEEP
+0043   0827           00098         MOVF    FLAG_SLEEP, W
+0044   1D03           00099         BTFSS   STATUS, Z        ; veo valor del flag para ahcer o no un sleep
+0045   2???           00100         GOTO    DORMIR
+                      00101 
+0046   2???           00102         GOTO    BUCLE
+                      00103         
+0047                  00104 DORMIR  
+0047   01A7           00105         CLRF FLAG_SLEEP         ; limpio flag
+0048   0063           00106         SLEEP                   ; ahora duermo
+0049   0000           00107         NOP                     ; 
+                      00108         
+004A   2???           00109         GOTO BUCLE
+                      00110         
+                      00111 
+                      00112 ;====================================================
+                      00113 ;                    INTERRUPCIÓN
+                      00114 ;====================================================
+004B                  00115 ISR
+004B   00A0           00116         MOVWF   W_TEMP          ;guardo el contexto
+004C   0E03           00117         SWAPF   STATUS, W       ;       =
+004D   00A1           00118         MOVWF   STATUS_TEMP     ;       =
+004E   080A           00119         MOVF    PCLATH, W       ;guardo el contexto
+004F   00A2           00120         MOVWF   PCLATH_TEMP     ;       =
+0050   018A           00121         CLRF    PCLATH          ;       =
+                      00122 
+0051   1283 1303      00123         BANKSEL PIR1
+0053   1E8C           00124         BTFSS   PIR1, RCIF      ;chequeo de interrupcion
+0054   2???           00125         GOTO    EXIT_ISR        ;veo si es por el puerto serie
+                      00126 
+0055   1283 1303      00127         BANKSEL RCSTA           ;chequeo de overrun
+0057   1898           00128         BTFSC   RCSTA, OERR     ;se verifica que no haya llegado 
+0058   2???           00129         GOTO    LIMPIAR_OERR    ;otro byte antes de leer el anterior
+                      00130 
+0059   1283 1303      00131         BANKSEL RCREG           ;lectura del byte recibido
+005B   081A           00132         MOVF    RCREG, W        ;se lo guarda en la variable temp
+005C   00A3           00133         MOVWF   TEMP
+                      00134 
+                      00135 
+                      00136 ;================= decodificacion ===================
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+005D   3035           00137         MOVLW   '5'
+005E   0623           00138         XORWF   TEMP, W         ;en esta subrutina chequeo que valor
+005F   1903           00139         BTFSC   STATUS, Z       ;es el que llego y de ahi voy a la accion
+0060   2???           00140         GOTO    GIROS           ;que se debe ejecutar
+                      00141                                 ;
+0061   3031           00142         MOVLW   '1'             ;lo que se hace es hacer un xor con cada valor
+0062   0623           00143         XORWF   TEMP, W         ;y verificar si hay un cero en la bandera z
+0063   1903           00144         BTFSC   STATUS, Z       ;si es cero es por que el valor era igual y se
+0064   2???           00145         GOTO    ADELANTE        ;se verifica que se pulso algo correcto
+                      00146                                 ;sino simplemente sale de la ISR
+0065   3032           00147         MOVLW   '2'             ;
+0066   0623           00148         XORWF   TEMP, W         ;   1 avanza
+0067   1903           00149         BTFSC   STATUS, Z       ;   3 retrocede
+0068   2???           00150         GOTO    DERECHA         ;   2 dobla a la derecha
+                      00151                                 ;   4 dobla a la izquierda
+0069   3033           00152         MOVLW   '3'             ;   5 giro sobre su propio eje
+006A   0623           00153         XORWF   TEMP, W         ;   0 detiene el los motores
+006B   1903           00154         BTFSC   STATUS, Z       ;   A y B seleccionan la velocidad
+006C   2???           00155         GOTO    ATRAS
+                      00156 
+006D   3034           00157         MOVLW   '4'
+006E   0623           00158         XORWF   TEMP, W
+006F   1903           00159         BTFSC   STATUS, Z
+0070   2???           00160         GOTO    IZQUIERDA
+                      00161 
+0071   3030           00162         MOVLW   '0'
+0072   0623           00163         XORWF   TEMP, W
+0073   1903           00164         BTFSC   STATUS, Z
+0074   2???           00165         GOTO    APAGAR
+                      00166 
+0075   3041           00167         MOVLW   'A'
+0076   0623           00168         XORWF   TEMP, W
+0077   1903           00169         BTFSC   STATUS, Z
+0078   2???           00170         GOTO    VELOCIDAD_100
+                      00171 
+0079   3042           00172         MOVLW   'B'
+007A   0623           00173         XORWF   TEMP, W
+007B   1903           00174         BTFSC   STATUS, Z
+007C   2???           00175         GOTO    VELOCIDAD_50
+                      00176         
+                      00177 
+                      00178 
+                      00179 
+007D   2???           00180         GOTO    EXIT_ISR
+                      00181 
+                      00182 
+                      00183 ;====================================================
+                      00184 ;           subrutinas de velocidad 
+                      00185 ;====================================================
+007E                  00186 APLICAR_VEL_ACTUAL
+007E   1283 1303      00187         BANKSEL MODO_VEL
+0080   0824           00188         MOVF    MODO_VEL, W
+0081   1903           00189         BTFSC   STATUS, Z
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0082   2???           00190         GOTO    APLICAR_100     ; si MODO_VEL = 0 ? 100%
+                      00191 
+                      00192 
+0083                  00193 APLICAR_50
+0083   1283 1303      00194         BANKSEL CCPR1L          ;velocidad al 50%
+0085   304E           00195         MOVLW   0x4E            ;se logra haciendo un PWM con 
+0086   0095           00196         MOVWF   CCPR1L          ;duty cicle del 50%
+                      00197 
+0087   304E           00198         MOVLW   0x4E
+0088   009B           00199         MOVWF   CCPR2L
+0089   0008           00200         RETURN
+                      00201 
+008A                  00202 APLICAR_100
+008A   1283 1303      00203         BANKSEL CCPR1L          ;idem velocidad al 50%
+008C   30FF           00204         MOVLW   0xFF            ;pero duty cicle del 100%
+008D   0095           00205         MOVWF   CCPR1L
+                      00206 
+008E   30FF           00207         MOVLW   0xFF
+008F   009B           00208         MOVWF   CCPR2L
+0090   0008           00209         RETURN
+                      00210 
+                      00211 
+                      00212 ;====================================================
+                      00213 ;               subrutinas de movimiento
+                      00214 ;====================================================
+                      00215 
+0091                  00216 ADELANTE
+0091   1283 1303      00217         BANKSEL PORTD
+0093   3047           00218         MOVLW   b'01000111'
+0094   0088           00219         MOVWF   PORTD
+                      00220 
+0095   2???           00221         CALL    APLICAR_VEL_ACTUAL
+0096   2???           00222         CALL    KICK_START
+0097   2???           00223         GOTO    EXIT_ISR
+                      00224 
+0098                  00225 DERECHA
+0098   1283 1303      00226         BANKSEL PORTD
+009A   3043           00227         MOVLW   b'01000011'
+009B   0088           00228         MOVWF   PORTD
+                      00229 
+009C   2???           00230         CALL    APLICAR_VEL_ACTUAL
+009D   2???           00231         CALL    KICK_START
+009E   2???           00232         GOTO    EXIT_ISR
+                      00233 
+009F                  00234 ATRAS
+009F   1283 1303      00235         BANKSEL PORTD
+00A1   302B           00236         MOVLW   b'00101011'
+00A2   0088           00237         MOVWF   PORTD
+                      00238 
+00A3   2???           00239         CALL    APLICAR_VEL_ACTUAL
+00A4   2???           00240         CALL    KICK_START
+00A5   2???           00241         GOTO    EXIT_ISR
+                      00242 
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00A6                  00243 IZQUIERDA
+00A6   1283 1303      00244         BANKSEL PORTD
+00A8   3007           00245         MOVLW   b'00000111'
+00A9   0088           00246         MOVWF   PORTD
+                      00247 
+00AA   2???           00248         CALL    APLICAR_VEL_ACTUAL
+00AB   2???           00249         CALL    KICK_START
+00AC   2???           00250         GOTO    EXIT_ISR
+                      00251 
+00AD                  00252 GIROS
+00AD   1283 1303      00253         BANKSEL PORTD
+00AF   3027           00254         MOVLW   b'00100111'
+00B0   0088           00255         MOVWF   PORTD
+                      00256 
+00B1   2???           00257         CALL    APLICAR_VEL_ACTUAL
+00B2   2???           00258         CALL    KICK_START
+00B3   2???           00259         GOTO    EXIT_ISR
+                      00260         
+00B4                  00261 APAGAR
+                      00262        ; duty = 0 (motores apagados)
+00B4   1283 1303      00263         BANKSEL CCPR1L
+00B6   0195           00264         CLRF    CCPR1L
+00B7   019B           00265         CLRF    CCPR2L
+                      00266 
+                      00267         ; direccion apagada
+00B8   1283 1303      00268         BANKSEL PORTD
+00BA   0188           00269         CLRF    PORTD
+                      00270 
+                      00271         ; marco flag para dormir
+00BB   1283 1303      00272         BANKSEL FLAG_SLEEP
+00BD   3001           00273         MOVLW   1
+00BE   00A7           00274         MOVWF   FLAG_SLEEP
+                      00275 
+00BF   2???           00276         GOTO EXIT_ISR
+                      00277 
+                      00278 
+                      00279 ;====================================================
+                      00280 ;        cambio permanente de velocidad con A/B
+                      00281 ;====================================================
+                      00282 
+00C0                  00283 VELOCIDAD_100
+00C0   1283 1303      00284         BANKSEL MODO_VEL
+00C2   01A4           00285         CLRF    MODO_VEL       ; guardo modo 100%
+                      00286 
+00C3   1283 1303      00287         BANKSEL CCP1CON
+00C5   303C           00288         MOVLW   b'00111100'    ; PWM + DC1B bits altos 
+00C6   0097           00289         MOVWF   CCP1CON
+00C7   1283 1303      00290         BANKSEL CCP2CON
+00C9   303C           00291         MOVLW   b'00111100'
+00CA   009D           00292         MOVWF   CCP2CON
+                      00293 
+00CB   1283 1303      00294         BANKSEL CCPR1L
+00CD   30FF           00295         MOVLW   0xFF
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00CE   0095           00296         MOVWF   CCPR1L
+                      00297 
+00CF   30FF           00298         MOVLW   0xFF
+00D0   009B           00299         MOVWF   CCPR2L
+                      00300 
+00D1   2???           00301         GOTO    EXIT_ISR
+                      00302 
+                      00303 
+00D2                  00304 VELOCIDAD_50
+00D2   1283 1303      00305         BANKSEL MODO_VEL
+00D4   3001           00306         MOVLW   1
+00D5   00A4           00307         MOVWF   MODO_VEL       ; guardo modo 50%
+                      00308 
+00D6   1283 1303      00309         BANKSEL CCP1CON
+00D8   300C           00310         MOVLW   b'00001100'    ; PWM normal
+00D9   0097           00311         MOVWF   CCP1CON
+                      00312 
+00DA   1283 1303      00313         BANKSEL CCP2CON
+00DC   300C           00314         MOVLW   b'00001100'
+00DD   009D           00315         MOVWF   CCP2CON
+                      00316 
+00DE   1283 1303      00317         BANKSEL CCPR1L
+00E0   304E           00318         MOVLW   0x4E         ; ~50%
+00E1   0095           00319         MOVWF   CCPR1L
+                      00320 
+00E2   304E           00321         MOVLW   0x4E
+00E3   009B           00322         MOVWF   CCPR2L
+                      00323 
+00E4   2???           00324         GOTO    EXIT_ISR
+                      00325 
+                      00326 
+                      00327 ;====================================================
+                      00328 ;                kickstart
+                      00329 ;====================================================
+                      00330 
+00E5                  00331 KICK_START
+00E5   1283 1303      00332         BANKSEL MODO_VEL        ;esta subrutina chequea que no este en el modo  
+00E7   0824           00333         MOVF    MODO_VEL, W     ;100% de velocidad
+00E8   1903           00334         BTFSC   STATUS, Z       ;si no lo esta pone el modo 100 durante 10MS
+00E9   0008           00335         RETURN                  ;para que los motores puedan romper la inercia
+                      00336                                 ;y despues pone la velocidad baja otra vez
+                      00337         
+00EA   2???           00338         CALL    VELOCIDAD_100
+00EB   2???           00339         CALL    DELAY
+00EC   2???           00340         CALL    VELOCIDAD_50
+00ED   0008           00341         RETURN
+                      00342 
+                      00343 
+                      00344 ;====================================================
+                      00345 ;                      delay de 10 MS
+                      00346 ;====================================================
+00EE                  00347 DELAY
+00EE   3014           00348         MOVLW   d'20'        
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00EF   00A5           00349         MOVWF   R0
+                      00350 
+00F0                  00351 D10_LOOP
+00F0   30C8           00352         MOVLW   d'200'       
+00F1   00A6           00353         MOVWF   R1
+                      00354 
+00F2                  00355 D10_LOOP2
+00F2   0000           00356         NOP                  
+00F3   0000           00357         NOP                  
+00F4   0BA6           00358         DECFSZ  R1, F        
+00F5   2???           00359         GOTO    D10_LOOP2    
+                      00360                              
+                      00361 
+00F6   0BA5           00362         DECFSZ  R0, F
+00F7   2???           00363         GOTO    D10_LOOP
+                      00364 
+00F8   0008           00365         RETURN
+                      00366 
+                      00367 
+                      00368 ;====================================================
+                      00369 ;                 limpieza de OERR
+                      00370 ;====================================================
+00F9                  00371 LIMPIAR_OERR
+00F9   1218           00372         BCF     RCSTA, CREN
+00FA   1618           00373         BSF     RCSTA, CREN
+00FB   2???           00374         GOTO    EXIT_ISR
+                      00375 
+                      00376 
+                      00377 ;====================================================
+                      00378 ;               salida de ISR
+                      00379 ;====================================================
+00FC                  00380 EXIT_ISR
+00FC   0822           00381         MOVF    PCLATH_TEMP, W      ;se recupera el 
+00FD   008A           00382         MOVWF   PCLATH              ;contexto
+00FE   0E21           00383         SWAPF   STATUS_TEMP, W
+00FF   0083           00384         MOVWF   STATUS
+0100   0EA0           00385         SWAPF   W_TEMP, F
+0101   0E20           00386         SWAPF   W_TEMP, W
+0102   0009           00387         RETFIE
+                      00388 
+                      00389         END
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE  9
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ABDEN                             00000000
+ABDOVF                            00000007
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ADCON0                            0000001F
+ADCON1                            0000009F
+ADCS0                             00000006
+ADCS1                             00000007
+ADDEN                             00000003
+ADELANTE                          00000091
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADON                              00000000
+ADRESH                            0000001E
+ADRESL                            0000009E
+ANS0                              00000000
+ANS1                              00000001
+ANS10                             00000002
+ANS11                             00000003
+ANS12                             00000004
+ANS13                             00000005
+ANS2                              00000002
+ANS3                              00000003
+ANS4                              00000004
+ANS5                              00000005
+ANS6                              00000006
+ANS7                              00000007
+ANS8                              00000000
+ANS9                              00000001
+ANSEL                             00000188
+ANSELH                            00000189
+APAGAR                            000000B4
+APLICAR_100                       0000008A
+APLICAR_50                        00000083
+APLICAR_VEL_ACTUAL                0000007E
+ATRAS                             0000009F
+BAUDCTL                           00000187
+BCLIE                             00000003
+BCLIF                             00000003
+BF                                00000000
+BRG0                              00000000
+BRG1                              00000001
+BRG10                             00000002
+BRG11                             00000003
+BRG12                             00000004
+BRG13                             00000005
+BRG14                             00000006
+BRG15                             00000007
+BRG16                             00000003
+BRG2                              00000002
+BRG3                              00000003
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE 10
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+BRG4                              00000004
+BRG5                              00000005
+BRG6                              00000006
+BRG7                              00000007
+BRG8                              00000000
+BRG9                              00000001
+BRGH                              00000002
+BUCLE                             00000041
+C                                 00000000
+C1CH0                             00000000
+C1CH1                             00000001
+C1IE                              00000005
+C1IF                              00000005
+C1OE                              00000005
+C1ON                              00000007
+C1OUT                             00000006
+C1POL                             00000004
+C1R                               00000002
+C1RSEL                            00000005
+C1SEN                             00000005
+C2CH0                             00000000
+C2CH1                             00000001
+C2IE                              00000006
+C2IF                              00000006
+C2OE                              00000005
+C2ON                              00000007
+C2OUT                             00000006
+C2POL                             00000004
+C2R                               00000002
+C2REN                             00000004
+C2RSEL                            00000004
+C2SYNC                            00000000
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCP2CON                           0000001D
+CCP2IE                            00000000
+CCP2IF                            00000000
+CCP2M0                            00000000
+CCP2M1                            00000001
+CCP2M2                            00000002
+CCP2M3                            00000003
+CCP2X                             00000005
+CCP2Y                             00000004
+CCPR1                             00000015
+CCPR1H                            00000016
+CCPR1L                            00000015
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE 11
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CCPR2                             0000001B
+CCPR2H                            0000001C
+CCPR2L                            0000001B
+CHS0                              00000002
+CHS1                              00000003
+CHS2                              00000004
+CHS3                              00000005
+CKE                               00000006
+CKP                               00000004
+CM1CON0                           00000107
+CM2CON0                           00000108
+CM2CON1                           00000109
+CREN                              00000004
+CSRC                              00000007
+D                                 00000005
+D10_LOOP                          000000F0
+D10_LOOP2                         000000F2
+DATA_ADDRESS                      00000005
+DC                                00000001
+DC1B0                             00000004
+DC1B1                             00000005
+DC2B0                             00000004
+DC2B1                             00000005
+DELAY                             000000EE
+DERECHA                           00000098
+DORMIR                            00000047
+D_A                               00000005
+D_NOT_A                           00000005
+ECCPAS                            0000009C
+ECCPAS0                           00000004
+ECCPAS1                           00000005
+ECCPAS2                           00000006
+ECCPASE                           00000007
+EEADR                             0000010D
+EEADRH                            0000010F
+EECON1                            0000018C
+EECON2                            0000018D
+EEDAT                             0000010C
+EEDATA                            0000010C
+EEDATH                            0000010E
+EEIE                              00000004
+EEIF                              00000004
+EEPGD                             00000007
+EXIT_ISR                          000000FC
+F                                 00000001
+FERR                              00000002
+FLAG_SLEEP                        00000027
+FSR                               00000004
+FVREN                             00000000
+GCEN                              00000007
+GIE                               00000007
+GIROS                             000000AD
+GO                                00000001
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE 12
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+GO_DONE                           00000001
+GO_NOT_DONE                       00000001
+HTS                               00000002
+I2C_DATA                          00000005
+I2C_READ                          00000002
+I2C_START                         00000003
+I2C_STOP                          00000004
+INDF                              00000000
+INICIO                            00000005
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IOCB                              00000096
+IOCB0                             00000000
+IOCB1                             00000001
+IOCB2                             00000002
+IOCB3                             00000003
+IOCB4                             00000004
+IOCB5                             00000005
+IOCB6                             00000006
+IOCB7                             00000007
+IRCF0                             00000004
+IRCF1                             00000005
+IRCF2                             00000006
+IRP                               00000007
+ISR                               0000004B
+IZQUIERDA                         000000A6
+KICK_START                        000000E5
+LIMPIAR_OERR                      000000F9
+LTS                               00000001
+MC1OUT                            00000007
+MC2OUT                            00000006
+MODO_VEL                          00000024
+MSK                               00000093
+MSK0                              00000000
+MSK1                              00000001
+MSK2                              00000002
+MSK3                              00000003
+MSK4                              00000004
+MSK5                              00000005
+MSK6                              00000006
+MSK7                              00000007
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BO                            00000000
+NOT_BOR                           00000000
+NOT_DONE                          00000001
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_RC8                           00000006
+NOT_T1SYNC                        00000002
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE 13
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+NOT_TO                            00000004
+NOT_TX8                           00000006
+NOT_W                             00000002
+NOT_WRITE                         00000002
+OERR                              00000001
+OPTION_REG                        00000081
+OSCCON                            0000008F
+OSCTUNE                           00000090
+OSFIE                             00000007
+OSFIF                             00000007
+OSTS                              00000003
+P                                 00000004
+P1M0                              00000006
+P1M1                              00000007
+PCL                               00000002
+PCLATH                            0000000A
+PCLATH_TEMP                       00000022
+PCON                              0000008E
+PDC0                              00000000
+PDC1                              00000001
+PDC2                              00000002
+PDC3                              00000003
+PDC4                              00000004
+PDC5                              00000005
+PDC6                              00000006
+PEIE                              00000006
+PEN                               00000002
+PIE1                              0000008C
+PIE2                              0000008D
+PIR1                              0000000C
+PIR2                              0000000D
+PORTA                             00000005
+PORTB                             00000006
+PORTC                             00000007
+PORTD                             00000008
+PORTE                             00000009
+PR2                               00000092
+PRSEN                             00000007
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+PSSAC0                            00000002
+PSSAC1                            00000003
+PSSBD0                            00000000
+PSSBD1                            00000001
+PSTRCON                           0000009D
+PULSR                             00000002
+PULSS                             00000003
+PWM1CON                           0000009B
+R                                 00000002
+R0                                00000025
+R1                                00000026
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE 14
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RA6                               00000006
+RA7                               00000007
+RB0                               00000000
+RB1                               00000001
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RBIE                              00000003
+RBIF                              00000000
+RC0                               00000000
+RC1                               00000001
+RC2                               00000002
+RC3                               00000003
+RC4                               00000004
+RC5                               00000005
+RC6                               00000006
+RC7                               00000007
+RC8_9                             00000006
+RC9                               00000006
+RCD8                              00000000
+RCEN                              00000003
+RCIDL                             00000006
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RD0                               00000000
+RD1                               00000001
+RD2                               00000002
+RD3                               00000003
+RD4                               00000004
+RD5                               00000005
+RD6                               00000006
+RD7                               00000007
+RE0                               00000000
+RE1                               00000001
+RE2                               00000002
+RE3                               00000003
+READ_WRITE                        00000002
+RP0                               00000005
+RP1                               00000006
+RSEN                              00000001
+RX9                               00000006
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE 15
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RX9D                              00000000
+R_NOT_W                           00000002
+R_W                               00000002
+S                                 00000003
+SBOREN                            00000004
+SCKP                              00000004
+SCS                               00000000
+SEN                               00000000
+SENDB                             00000003
+SMP                               00000007
+SPBRG                             00000099
+SPBRGH                            0000009A
+SPEN                              00000007
+SR0                               00000006
+SR1                               00000007
+SRCON                             00000185
+SREN                              00000005
+SSPADD                            00000093
+SSPBUF                            00000013
+SSPCON                            00000014
+SSPCON2                           00000091
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPMSK                            00000093
+SSPOV                             00000006
+SSPSTAT                           00000094
+STATUS                            00000003
+STATUS_TEMP                       00000021
+STRA                              00000000
+STRB                              00000001
+STRC                              00000002
+STRD                              00000003
+STRSYNC                           00000004
+SWDTEN                            00000000
+SYNC                              00000004
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1GINV                            00000007
+T1GIV                             00000007
+T1GSS                             00000001
+T1INSYNC                          00000002
+T1OSCEN                           00000003
+T1SYNC                            00000002
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE 16
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TEMP                              00000023
+TMR0                              00000001
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR1                              0000000E
+TMR1CS                            00000001
+TMR1GE                            00000006
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISA6                            00000006
+TRISA7                            00000007
+TRISB                             00000086
+TRISB0                            00000000
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             00000087
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC3                            00000003
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRISD                             00000088
+TRISD0                            00000000
+TRISD1                            00000001
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE 17
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TRISD2                            00000002
+TRISD3                            00000003
+TRISD4                            00000004
+TRISD5                            00000005
+TRISD6                            00000006
+TRISD7                            00000007
+TRISE                             00000089
+TRISE0                            00000000
+TRISE1                            00000001
+TRISE2                            00000002
+TRISE3                            00000003
+TRMT                              00000001
+TUN0                              00000000
+TUN1                              00000001
+TUN2                              00000002
+TUN3                              00000003
+TUN4                              00000004
+TX8_9                             00000006
+TX9                               00000006
+TX9D                              00000000
+TXD8                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+UA                                00000001
+ULPWUE                            00000005
+ULPWUIE                           00000002
+ULPWUIF                           00000002
+VCFG0                             00000004
+VCFG1                             00000005
+VELOCIDAD_100                     000000C0
+VELOCIDAD_50                      000000D2
+VR0                               00000000
+VR1                               00000001
+VR2                               00000002
+VR3                               00000003
+VRCON                             00000097
+VREN                              00000007
+VROE                              00000006
+VRR                               00000005
+VRSS                              00000004
+W                                 00000000
+WCOL                              00000007
+WDTCON                            00000105
+WDTPS0                            00000001
+WDTPS1                            00000002
+WDTPS2                            00000003
+WDTPS3                            00000004
+WPUB                              00000095
+WPUB0                             00000000
+WPUB1                             00000001
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE 18
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+WPUB2                             00000002
+WPUB3                             00000003
+WPUB4                             00000004
+WPUB5                             00000005
+WPUB6                             00000006
+WPUB7                             00000007
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+WUE                               00000001
+W_TEMP                            00000020
+Z                                 00000002
+_BOR21V                           00003EFF
+_BOR40V                           00003FFF
+_BOR4V_BOR21V                     00003EFF
+_BOR4V_BOR40V                     00003FFF
+_BOREN_NSLEEP                     00003EFF
+_BOREN_OFF                        00003CFF
+_BOREN_ON                         00003FFF
+_BOREN_SBODEN                     00003DFF
+_BOR_NSLEEP                       00003EFF
+_BOR_OFF                          00003CFF
+_BOR_ON                           00003FFF
+_BOR_SBODEN                       00003DFF
+_CONFIG1                          00002007
+_CONFIG2                          00002008
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003F7F
+_CP_OFF                           00003FFF
+_CP_ON                            00003FBF
+_DEBUG_OFF                        00003FFF
+_DEBUG_ON                         00001FFF
+_DEVID1                           00002006
+_EC_OSC                           00003FFB
+_EXTRC                            00003FFF
+_EXTRCIO                          00003FFE
+_EXTRC_OSC_CLKOUT                 00003FFF
+_EXTRC_OSC_NOCLKOUT               00003FFE
+_FCMEN_OFF                        000037FF
+_FCMEN_ON                         00003FFF
+_FOSC_EC                          00003FFB
+_FOSC_EXTRC_CLKOUT                00003FFF
+_FOSC_EXTRC_NOCLKOUT              00003FFE
+_FOSC_HS                          00003FFA
+_FOSC_INTRC_CLKOUT                00003FFD
+_FOSC_INTRC_NOCLKOUT              00003FFC
+_FOSC_LP                          00003FF8
+_FOSC_XT                          00003FF9
+_HS_OSC                           00003FFA
+_IDLOC0                           00002000
+_IDLOC1                           00002001
+_IDLOC2                           00002002
+_IDLOC3                           00002003
+MPASM 5.87                     AUTITOASM.ASM   11-18-2025  20:28:26         PAGE 19
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_IESO_OFF                         00003BFF
+_IESO_ON                          00003FFF
+_INTOSC                           00003FFD
+_INTOSCIO                         00003FFC
+_INTRC_OSC_CLKOUT                 00003FFD
+_INTRC_OSC_NOCLKOUT               00003FFC
+_LP_OSC                           00003FF8
+_LVP_OFF                          00002FFF
+_LVP_ON                           00003FFF
+_MCLRE_OFF                        00003FDF
+_MCLRE_ON                         00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FEF
+_WDTE_OFF                         00003FF7
+_WDTE_ON                          00003FFF
+_WDT_OFF                          00003FF7
+_WDT_ON                           00003FFF
+_WRT_1FOURTH                      00003BFF
+_WRT_256                          00003DFF
+_WRT_HALF                         000039FF
+_WRT_OFF                          00003FFF
+_XT_OSC                           00003FF9
+__16F887                          00000001
+
+Errors   :     0
+Warnings :     1 reported,     0 suppressed
+Messages :    12 reported,     0 suppressed
+
+

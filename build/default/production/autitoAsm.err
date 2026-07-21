@@ -1,0 +1,13 @@
+Warning[205] C:\FACU\MPLAB\AUTITO_FINAL.X\AUTITOASM.ASM 1 : Found directive in column 1. (LIST)
+Message[302] C:\FACU\MPLAB\AUTITO_FINAL.X\AUTITOASM.ASM 32 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\FACU\MPLAB\AUTITO_FINAL.X\AUTITOASM.ASM 33 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\FACU\MPLAB\AUTITO_FINAL.X\AUTITOASM.ASM 37 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\FACU\MPLAB\AUTITO_FINAL.X\AUTITOASM.ASM 40 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\FACU\MPLAB\AUTITO_FINAL.X\AUTITOASM.ASM 41 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\FACU\MPLAB\AUTITO_FINAL.X\AUTITOASM.ASM 42 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\FACU\MPLAB\AUTITO_FINAL.X\AUTITOASM.ASM 43 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\FACU\MPLAB\AUTITO_FINAL.X\AUTITOASM.ASM 48 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\FACU\MPLAB\AUTITO_FINAL.X\AUTITOASM.ASM 52 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\FACU\MPLAB\AUTITO_FINAL.X\AUTITOASM.ASM 55 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\FACU\MPLAB\AUTITO_FINAL.X\AUTITOASM.ASM 62 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\FACU\MPLAB\AUTITO_FINAL.X\AUTITOASM.ASM 79 : Register in operand not in bank 0.  Ensure that bank bits are correct.
